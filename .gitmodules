@@ -1,0 +1,3 @@
+[submodule "persistence_landscapes"]
+	path = persistence_landscapes
+	url = https://github.com/gruberan/persistence_landscapes
