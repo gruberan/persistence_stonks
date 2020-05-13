@@ -1,1 +1,2 @@
-When cloning this you also need the persistence_landscapes package as a submodule. This can be accomplished easily via git clone --recurse-submodules https://github.com/gruberan/persistence_stonks
+When cloning this you also need the persistence_landscapes package as a submodule. This can be accomplished easily via:
+    git clone --recurse-submodules https://github.com/gruberan/persistence_stonks
