@@ -68,7 +68,7 @@ def compute_window_landscapes(start_dt, end_dt, ticker_symbol_list, window_size,
         start_dt (str or datetime.datetime): last date to compute the landscapes for
         maxdim (int): Maximum homology dimension computed. Will compute all dimensions lower than and equal to this value. For 1, H_0 and H_1 will be computed.
     """
-    start_date = date_by_subtracting_exchange_calendar_days(isoparse(start_dt),window_size)
+    start_date = date_by_subtracting_exchange_calendar_days(isoparse(start_dt),window_size+1)
     end_date = isoparse(end_dt) if type(end_dt) == str else end_dt
     
     df = stonk_df(start_dt = start_date, end_dt = end_date, ticker_symbol_list=ticker_symbol_list)
