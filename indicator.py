@@ -87,39 +87,45 @@ def compute_window_landscapes(start_dt, end_dt, ticker_symbol_list, window_size,
     for j in range(maxdim+1):
         df['L'+str(j)] = integrals[j]
     return df
-  
-def plot_window_landscapes(start_dt, end_dt, ticker_symbol_list, window_size, row_syms=["^GSPC","L0","L1"], highlight_dates=[], maxdim=1, output_fn=None, colors = ('k', 'r', 'b')):
+
+def plot_window_landscapes(start_dt, end_dt, ticker_symbol_list=[], window_size=None, row_syms=["^GSPC","L0","L1"], highlight_dates=[], maxdim=1,
+                            output_fn=None, colors = ('k', 'r', 'b'), use_precomputed_df=False, precomputed_df=None, figscale=(1,1)):
     """
     Plots landscape indicator in line with other designated tickers.
     
     Arguments:
         start_dt            (str or datetime.datetime):         Start date of interval
         end_dt              (str or datetime.datetime):         End date of interval
-        ticker_symbol_list  (list of str):                      ticker symbols to make the point cloud out of
-        window_size         (int):                              window size of the point cloud in number of days
+        ticker_symbol_list  (list of str):                      ticker symbols to make the point cloud out of. Not optional unless you are using precomputed_df.
+        window_size         (int):                              window size of the point cloud in number of days. Not optional unless you are using precomputed_df.
         row_syms            (list of str):                      which ticker symbols to show in the chart. Use L0, L1, etc. for the associated topological indicators.
         highlight_dates     (list of str or datetime.datetime): this will put lines at each of the dates in the list for visual emphasis
         maxdim              (int):                              Maximum homology dimension computed. Will compute all dimensions lower than and equal to this value. For 1, H_0 and H_1 will be computed.
         output_fn           (str):                              include a filename to save the figure rather than displaying it
         colors              (list of str):                      list of colors for each line of the chart. (Cycles through if more charts given than colors.)
+        use_precomputed_df  (bool):                             set to true if using precomputed dataframe
+        precomputed_df      (DataFrame):                        if df is already computed, put it here
+        figscale            (float, float):                     width and height multipliers for scale of figures
     """
     # Compute the indicators
-    df = compute_window_landscapes(start_dt = start_dt, end_dt = end_dt, ticker_symbol_list=ticker_symbol_list, window_size= window_size)
+    if use_precomputed_df:
+        df = precomputed_df.drop(precomputed_df.index[(precomputed_df.index < start_dt) | (precomputed_df.index > end_dt)])
+    else:
+        df = compute_window_landscapes(start_dt = start_dt, end_dt = end_dt, ticker_symbol_list=ticker_symbol_list, window_size= window_size)       
 
     # Get data for any row_syms that are not in the point cloud's ticker_symbol_list
-    new_row_syms = [x for x in row_syms if x not in ticker_symbol_list and x not in ['L0','L1']]
+    new_row_syms = [x for x in row_syms if x not in ticker_symbol_list and x not in df.columns]
     if len(new_row_syms) > 0:
-        new_row_syms_df = stonk_df(start_dt=start_dt,end_dt=end_dt,ticker_symbol_list=new_row_syms)
+        new_row_syms_df = stonk_df(start_dt=start_dt, end_dt=end_dt, ticker_symbol_list=new_row_syms)
         for row_sym in new_row_syms:
             df[row_sym] = new_row_syms_df[row_sym]
     
     # Convert highlighted dates if necessary
-    highlight_dates = [isoparse(x) if type(x) == str else x for x in highlight_dates]
+    highlight_dates = [x if type(x) == str else x for x in highlight_dates]
     
     # Display everything
-    fig, axes = plt.subplots(nrows=len(row_syms))
+    fig, axes = plt.subplots(nrows=len(row_syms), figsize=(figscale[0]*7,figscale[1]*2*len(row_syms)))
     
-    width=window_size+1
     for ax, row_sym in zip(axes[:-1], row_syms[:-1]):
         ax.set_ylabel(row_sym)
         ax.set_yticklabels([])
@@ -129,28 +135,25 @@ def plot_window_landscapes(start_dt, end_dt, ticker_symbol_list, window_size, ro
     axes[-1].set_ylabel(row_syms[-1])
     axes[-1].set_yticklabels([])
     xlabels = []
-    for x in df.index[width:]:
-        if isoparse(str(x)) in highlight_dates:
+    for x in df[start_dt:].index:
+        if str(x) in highlight_dates:
             xlabels.append(x)
         else:
             xlabels.append('')
-            
+    
     # Display highlighted dates if any
     for dte in highlight_dates:
-            if type(highlight_dates) == dict:
-                axes[-1].axvline(dte, label=highlight_dates[dte], alpha=0.5)
-            else:
-                axes[-1].axvline(dte, label=dte, alpha=0.5)
+        if type(highlight_dates) == dict:
+            axes[-1].axvline(dte, label=highlight_dates[dte], alpha=0.5)
+        else:
+            axes[-1].axvline(dte, label=dte, alpha=0.5)
     plt.setp(axes[-1].get_xticklabels(), rotation=30, horizontalalignment='right')
     
     colors = [colors[i%len(colors)] for i in range(len(row_syms))]
-    xs = [df.index[width:]] * len(row_syms)
+    xs = [df[start_dt:].index] * len(row_syms)
     ys = []
     for sym in row_syms:
-        if sym in ['L'+str(x) for x in range(100)]:
-            ys.append(df[sym][width:])
-        else:
-            ys.append(df[sym].iloc[width:])
+        ys.append(df[sym][start_dt:])
     for ax, color, x, y in zip(axes, colors, xs, ys):
         ax.plot(x, y, color=color)
     
