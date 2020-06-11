@@ -10,6 +10,7 @@ import pandas_datareader.data as web
 import pandas_market_calendars as mcal
 from persistence_landscapes.landscapes import Landscape_Reader
 from dateutil.parser import isoparse
+from functools import reduce
 
 def log_returns(df):
     """
@@ -21,6 +22,7 @@ def log_returns(df):
         a = list(df.index)
         dfdict = df.T.apply(tuple).to_dict()
         return [[math.log(dfdict[a[i+1]][j]/dfdict[a[i]][j]) for j in range(0,len(dfdict[a[i]]))] for i in range(0,len(a)-1)]
+
 def sliding_point_cloud(a, width):
     """
     Returns a sliding window point cloud from a list (or dataframe) of points.
@@ -32,16 +34,42 @@ def sliding_point_cloud(a, width):
         dfdict = df.T.apply(tuple).to_dict()
         return [[dfdict[d] for d in ind[i-width:i]] for i in range(width,len(ind))]
 
-def stonk_df(start_dt, end_dt, ticker_symbol_list):
-    """
-    Reads close prices from each of the tickers in ticker_symbol_list and returns in a dataframe.
-    """
-    return pd.concat(
-        [web.DataReader(sym, 'yahoo', start_dt, end_dt)['Close'] for sym in ticker_symbol_list],
-        axis=1,
-        keys=ticker_symbol_list
-    )
-    
+class stonk_df:
+    def __init__(self, df):
+        self.value = df 
+
+    def from_DataReader(start_dt, end_dt, ticker_symbol_list, source='yahoo', price_type='Close'):
+        """
+        Reads prices from each of the tickers in ticker_symbol_list and returns in a dataframe.
+        """
+        return stonk_df(
+                    pd.concat(
+                        [web.DataReader(sym, source, start_dt, end_dt)[price_type] for sym in ticker_symbol_list],
+                        axis=1,
+                        keys=ticker_symbol_list
+                    )
+                )
+
+    def from_csv_files(csv_list, ticker_symbol_list, index_col='Time', price_type='Last'):
+        """
+        Reads close prices from each of the tickers in ticker_symbol_list and returns in a dataframe.
+        """
+        return stonk_df(
+                    pd.concat(
+                        [pd.read_csv(fn, index_col=index_col, parse_dates=True, infer_datetime_format= True)[price_type] for fn in csv_list],
+                        axis=1,
+                        keys=ticker_symbol_list
+                    ).dropna() 
+                )
+
+    def log_returns(self):
+        return np.log(self.value.shift(1)) - np.log(self.value) 
+
+    def sliding_point_cloud(self, N):
+        df1 = pd.DataFrame(self.value.apply(lambda x: [y for y in x], axis=1))
+        df2 = [df1.shift(-i).applymap(lambda x: [x]) for i in range(0, N)]
+        return reduce(lambda x, y: x.add(y), df2).iloc[N-1:]
+
 def date_by_subtracting_exchange_calendar_days(from_dt, num_days, exchange='NYSE'):
     """
     Returns the date that is num_days before from_date, excluding days when the NYSE is not open.
@@ -59,8 +87,8 @@ def date_by_subtracting_exchange_calendar_days(from_dt, num_days, exchange='NYSE
         current_date -= dt.timedelta(days=1)
         if current_date in schedule:
             calendar_days_to_subtract -= 1
-    return current_date
-    
+    return current_date    
+
 def compute_window_landscapes(start_dt, end_dt, ticker_symbol_list, window_size, maxdim=1):
     """
         
@@ -162,3 +190,38 @@ def plot_window_landscapes(start_dt, end_dt, ticker_symbol_list=[], window_size=
         plt.savefig(output_fn)
     plt.show()
   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
