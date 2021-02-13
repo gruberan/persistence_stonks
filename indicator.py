@@ -179,6 +179,6 @@ def plot_window_landscapes(start_dt, end_dt, ticker_symbol_list=[], window_size=
         ax.plot(x, y, color=color)
 
     # Save figure if indicated
-    if output_fn != None:
+    if output_fn is not None:
         plt.savefig(output_fn)
     plt.show()
