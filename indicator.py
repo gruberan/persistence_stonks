@@ -16,17 +16,17 @@ def log_returns(df):
     Converts a dataframe (or list) of daily close prices to a dataframe of daily log returns, i.e. ln(price today/ price yesterday).
     """
     if type(df) == list:
-        return [[math.log(a[i+1][j]/(a[i][j])) for j in range(0,len(a[i]))] for i in range(0,len(a)-1)]
+        return [[math.log(df[i+1][j]/(df[i][j])) for j in range(0,len(df[i]))] for i in range(0,len(df)-1)]
     else:
         a = list(df.index)
         dfdict = df.T.apply(tuple).to_dict()
         return [[math.log(dfdict[a[i+1]][j]/dfdict[a[i]][j]) for j in range(0,len(dfdict[a[i]]))] for i in range(0,len(a)-1)]
-def sliding_point_cloud(a, width):
+def sliding_point_cloud(df, width):
     """
     Returns a sliding window point cloud from a list (or dataframe) of points.
     """
-    if type(a) == list:
-        return [a[i:i+width] for i in range(0,len(a)-width)]
+    if type(df) == list:
+        return [df[i:i+width] for i in range(0,len(df)-width)]
     else:
         ind = list(df.index)
         dfdict = df.T.apply(tuple).to_dict()
