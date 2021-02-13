@@ -98,7 +98,7 @@ def compute_window_landscapes(start_dt, end_dt, ticker_symbol_list, window_size,
 
 
 def plot_window_landscapes(start_dt, end_dt, ticker_symbol_list=[], window_size=None, row_syms=["^GSPC", "L0", "L1"],
-                           highlight_dates= [], maxdim=1,
+                           highlight_dates=[], maxdim=1,
                            output_fn=None, colors=('k', 'r', 'b'), use_precomputed_df=False, precomputed_df=None,
                            figscale=(1, 1)):
     """
@@ -107,13 +107,21 @@ def plot_window_landscapes(start_dt, end_dt, ticker_symbol_list=[], window_size=
     Arguments:
         start_dt            (str or datetime.datetime):         Start date of interval
         end_dt              (str or datetime.datetime):         End date of interval
-        ticker_symbol_list  (list of str):                      ticker symbols to make the point cloud out of. Not optional unless you are using precomputed_df.
-        window_size         (int):                              window size of the point cloud in number of days. Not optional unless you are using precomputed_df.
-        row_syms            (list of str):                      which ticker symbols to show in the chart. Use L0, L1, etc. for the associated topological indicators.
-        highlight_dates     (list of str or datetime.datetime): this will put lines at each of the dates in the list for visual emphasis
-        maxdim              (int):                              Maximum homology dimension computed. Will compute all dimensions lower than and equal to this value. For 1, H_0 and H_1 will be computed.
-        output_fn           (str):                              include a filename to save the figure rather than displaying it
-        colors              (list of str):                      list of colors for each line of the chart. (Cycles through if more charts given than colors.)
+        ticker_symbol_list  (list of str):                      ticker symbols to make the point cloud out of. Not
+                                                                optional unless you are using precomputed_df.
+        window_size         (int):                              window size of the point cloud in number of days. Not
+                                                                optional unless you are using precomputed_df.
+        row_syms            (list of str):                      which ticker symbols to show in the chart. Use L0 L1 etc
+                                                                for the associated topological indicators.
+        highlight_dates     (list of str or datetime.datetime): this will put lines at each of the dates in the list for
+                                                                visual emphasis
+        maxdim              (int):                              Maximum homology dimension computed. Will compute all
+                                                                dimensions lower than and equal to this value. For 1,
+                                                                H_0 and H_1 will be computed.
+        output_fn           (str):                              include a filename to save the figure rather than
+                                                                displaying it
+        colors              (list of str):                      list of colors for each line of the chart. (Cycles
+                                                                through if more charts given than colors.)
         use_precomputed_df  (bool):                             set to true if using precomputed dataframe
         precomputed_df      (DataFrame):                        if df is already computed, put it here
         figscale            (float, float):                     width and height multipliers for scale of figures
