@@ -12,29 +12,22 @@ from dateutil.parser import isoparse
 
 def log_returns(df):
     """
-    Converts a dataframe (or list) of daily close prices to a dataframe of daily log returns, i.e. ln(price today/
-    price yesterday).
+    Converts a dataframe of daily close prices to a dataframe of log returns.
     """
-    if type(df) == list:
-        return [[math.log(df[i + 1][j] / (df[i][j])) for j in range(0, len(df[i]))] for i in range(0, len(df) - 1)]
-    else:
-        a = list(df.index)
-        dfdict = df.T.apply(tuple).to_dict()
-        return [[math.log(dfdict[a[i + 1]][j] / dfdict[a[i]][j]) for j in range(0, len(dfdict[a[i]]))] for i in
-                range(0, len(a) - 1)]
-
+    return (np.log(df) - np.log(df.shift(1))).dropna()
 
 def sliding_point_cloud(df, width):
     """
     Returns a sliding window point cloud from a list (or dataframe) of points.
+
+    width (int or np.timedelta64): if int, window goes by iloc. if timedelta, window goes by time.
     """
-    if type(df) == list:
-        return [df[i:i + width] for i in range(0, len(df) - width)]
-    else:
+    if type(width) == int:
         ind = list(df.index)
         dfdict = df.T.apply(tuple).to_dict()
         return [[dfdict[d] for d in ind[i - width:i]] for i in range(width, len(ind))]
-
+    else:
+        return [[x for x in df.index if dt - width <= x <= dt] for dt in df.index]
 
 def stonk_df(start_dt, end_dt, ticker_symbol_list):
     """
